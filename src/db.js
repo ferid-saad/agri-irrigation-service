@@ -19,6 +19,17 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS arrosages (
+      id SERIAL PRIMARY KEY,
+      parcelle_id INTEGER NOT NULL REFERENCES parcelles(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL,
+      date_arrosage DATE NOT NULL,
+      duree_min INTEGER NOT NULL,
+      volume_l NUMERIC(10, 2) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
 }
 
 module.exports = { pool, initDb };
