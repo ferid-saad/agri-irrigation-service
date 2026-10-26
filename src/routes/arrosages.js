@@ -1,0 +1,46 @@
+const express = require('express');
+const { pool } = require('../db');
+const { authenticate } = require('../middleware/auth');
+
+const router = express.Router();
+
+router.post('/arrosages', authenticate, async (req, res) => {
+  const { parcelle_id, date_arrosage, duree_min, volume_l } = req.body || {};
+  const parcelleId = Number(parcelle_id);
+  const duree = Number(duree_min);
+  const volume = Number(volume_l);
+  const dateValide =
+    typeof date_arrosage === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(date_arrosage) &&
+    !Number.isNaN(Date.parse(date_arrosage));
+
+  if (!Number.isInteger(parcelleId) || parcelleId <= 0 || !dateValide ||
+      !Number.isInteger(duree) || duree <= 0 || !(volume > 0)) {
+    return res.status(400).json({
+      error: 'parcelle_id, date_arrosage (AAAA-MM-JJ), duree_min et volume_l (> 0) requis',
+    });
+  }
+
+  try {
+    const parcelle = await pool.query(
+      'SELECT id FROM parcelles WHERE id = $1 AND user_id = $2',
+      [parcelleId, req.user.userId]
+    );
+    if (parcelle.rows.length === 0) {
+      return res.status(404).json({ error: 'parcelle introuvable' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO arrosages (parcelle_id, user_id, date_arrosage, duree_min, volume_l)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, parcelle_id, to_char(date_arrosage, 'YYYY-MM-DD') AS date_arrosage, duree_min, volume_l`,
+      [parcelleId, req.user.userId, date_arrosage, duree, volume]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'erreur serveur' });
+  }
+});
+
+module.exports = router;
