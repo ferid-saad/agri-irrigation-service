@@ -21,3 +21,18 @@ describe('POST /arrosages', () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe('PATCH /arrosages/:id', () => {
+  it('refuse une requête sans jeton', async () => {
+    const res = await request(app).patch('/arrosages/1').send({ volume_reel_l: 500 });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('refuse un volume manquant avec un jeton valide', async () => {
+    const res = await request(app)
+      .patch('/arrosages/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+    expect(res.statusCode).toBe(400);
+  });
+});

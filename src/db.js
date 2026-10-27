@@ -30,6 +30,9 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
+    await pool.query(`
+    ALTER TABLE arrosages ADD COLUMN IF NOT EXISTS volume_reel_l NUMERIC(10, 2)
+  `);
 }
 
 module.exports = { pool, initDb };
