@@ -43,4 +43,38 @@ router.post('/arrosages', authenticate, async (req, res) => {
   }
 });
 
+router.patch('/arrosages/:id', authenticate, async (req, res) => {
+  const arrosageId = Number(req.params.id);
+  const { volume_reel_l } = req.body || {};
+  const volumeReel = Number(volume_reel_l);
+  const volumeValide =
+    volume_reel_l !== undefined &&
+    volume_reel_l !== null &&
+    volume_reel_l !== '' &&
+    volumeReel >= 0;
+
+  if (!Number.isInteger(arrosageId) || arrosageId <= 0 || !volumeValide) {
+    return res
+      .status(400)
+      .json({ error: 'id valide et volume_reel_l (supérieur ou égal à 0) requis' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE arrosages SET volume_reel_l = $1
+       WHERE id = $2 AND user_id = $3
+       RETURNING id, parcelle_id, to_char(date_arrosage, 'YYYY-MM-DD') AS date_arrosage,
+                 duree_min, volume_l, volume_reel_l`,
+      [volumeReel, arrosageId, req.user.userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'arrosage introuvable' });
+    }
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'erreur serveur' });
+  }
+});
+
 module.exports = router;
