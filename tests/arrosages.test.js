@@ -36,3 +36,17 @@ describe('PATCH /arrosages/:id', () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe('GET /arrosages', () => {
+  it('refuse une requête sans jeton', async () => {
+    const res = await request(app).get('/arrosages');
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('refuse un parcelle_id invalide avec un jeton valide', async () => {
+    const res = await request(app)
+      .get('/arrosages?parcelle_id=abc')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.statusCode).toBe(400);
+  });
+});

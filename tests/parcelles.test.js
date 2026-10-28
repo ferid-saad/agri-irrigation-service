@@ -29,3 +29,10 @@ describe('POST /parcelles', () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe('GET /parcelles', () => {
+  it('refuse une requête sans jeton', async () => {
+    const res = await request(app).get('/parcelles');
+    expect(res.statusCode).toBe(401);
+  });
+});
