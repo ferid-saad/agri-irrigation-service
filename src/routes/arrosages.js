@@ -77,4 +77,38 @@ router.patch('/arrosages/:id', authenticate, async (req, res) => {
   }
 });
 
+router.get('/arrosages', authenticate, async (req, res) => {
+  const { parcelle_id } = req.query;
+  const params = [req.user.userId];
+  let filtre = '';
+
+  if (parcelle_id !== undefined) {
+    const parcelleId = Number(parcelle_id);
+    if (!Number.isInteger(parcelleId) || parcelleId <= 0) {
+      return res
+        .status(400)
+        .json({ error: 'parcelle_id doit être un entier positif' });
+    }
+    params.push(parcelleId);
+    filtre = 'AND a.parcelle_id = $2';
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT a.id, a.parcelle_id, p.nom AS parcelle_nom,
+              to_char(a.date_arrosage, 'YYYY-MM-DD') AS date_arrosage,
+              a.duree_min, a.volume_l, a.volume_reel_l
+       FROM arrosages a
+       JOIN parcelles p ON p.id = a.parcelle_id
+       WHERE a.user_id = $1 ${filtre}
+       ORDER BY a.date_arrosage DESC, a.id DESC`,
+      params
+    );
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'erreur serveur' });
+  }
+});
+
 module.exports = router;

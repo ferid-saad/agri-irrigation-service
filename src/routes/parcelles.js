@@ -26,4 +26,17 @@ router.post('/parcelles', authenticate, async (req, res) => {
   }
 });
 
+router.get('/parcelles', authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, nom, surface_ha, culture FROM parcelles WHERE user_id = $1 ORDER BY id',
+      [req.user.userId]
+    );
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'erreur serveur' });
+  }
+});
+
 module.exports = router;
