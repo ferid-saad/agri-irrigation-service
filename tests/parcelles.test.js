@@ -36,3 +36,17 @@ describe('GET /parcelles', () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe('DELETE /parcelles/:id', () => {
+  it('refuse une requête sans jeton', async () => {
+    const res = await request(app).delete('/parcelles/1');
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('refuse un identifiant invalide avec un jeton valide', async () => {
+    const res = await request(app)
+      .delete('/parcelles/abc')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.statusCode).toBe(400);
+  });
+});
