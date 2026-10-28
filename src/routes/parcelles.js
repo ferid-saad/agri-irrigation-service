@@ -39,4 +39,25 @@ router.get('/parcelles', authenticate, async (req, res) => {
   }
 });
 
+router.delete('/parcelles/:id', authenticate, async (req, res) => {
+  const parcelleId = Number(req.params.id);
+
+  if (!Number.isInteger(parcelleId) || parcelleId <= 0) {
+    return res.status(400).json({ error: 'id de parcelle invalide' });
+  }
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM parcelles WHERE id = $1 AND user_id = $2 RETURNING id',
+      [parcelleId, req.user.userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'parcelle introuvable' });
+    }
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'erreur serveur' });
+  }
+});
 module.exports = router;
